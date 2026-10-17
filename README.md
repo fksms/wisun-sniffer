@@ -99,6 +99,8 @@ The executable is generated at:
 -c  RX channel index
 -f  RX frequency in Hz
 -g  RX gain
+-w  Write PCAP data to a file or FIFO
+-k  Keep packets with invalid FCS when using -w
 -m  Run FSK/GFSK modem loopback self-test on the specified channel and exit
 -t  Run the channelizer single-tone self-test and exit
 -h  Print help
@@ -138,6 +140,23 @@ Typical runtime output includes:
 
 Stop the program with `Ctrl+C`.
 
+### Stream packets to Wireshark in real time
+
+Create a FIFO and start Wireshark first:
+
+```bash
+mkfifo /tmp/wisun.pcap
+wireshark -k -i /tmp/wisun.pcap
+```
+
+In another terminal, start the sniffer:
+
+```bash
+./build/wisun-sniffer -w /tmp/wisun.pcap
+```
+
+The `-w` option also supports regular PCAP files. Use a FIFO for live display in Wireshark. Packets are written as IEEE 802.15.4 no-FCS (linktype 230); the FCS is validated and removed. Frames with invalid FCS are dropped by default; add `-k` to keep them (still without their FCS). Normal diagnostic output remains on standard output.
+
 ## Notes for Live Capture
 
 - The current capture path expects a USRP that works with UHD and can sample at 10 Msps.
@@ -153,4 +172,3 @@ Stop the program with `Ctrl+C`.
 ## Future Improvements
 
 - Add richer ARIB STD-T108 / IEEE 802.15.4g packet decoding
-- Export decoded packets to PCAP or structured logs

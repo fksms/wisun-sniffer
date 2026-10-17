@@ -14,6 +14,7 @@
 #include "channelizer_test.h"
 #include "demodulator.h"
 #include "lfrb.h"
+#include "packet.h"
 #include "usrp.h"
 
 // 送信テスト時は以下をコメントアウト
@@ -38,6 +39,8 @@ void print_help(void) {
                     "    -c (RX channel)\n"
                     "    -f (RX frequency in Hz)\n"
                     "    -g (RX gain)\n"
+                    "    -w (write live PCAP data to a file or FIFO)\n"
+                    "    -k (keep packets with invalid FCS when using -w)\n"
                     "    -m (run FSK/GFSK modem loopback self-test on channel and exit)\n"
                     "    -t (run channelizer self-test and exit)\n"
                     "    -h (print this help message)\n");
@@ -57,6 +60,8 @@ int main(int argc, char *argv[]) {
     double rx_gain = 30.0;
     size_t rx_channel = 0;
     char *rx_antenna = "RX2";
+    const char *pcap_output_path = NULL;
+    bool keep_bad_fcs = false;
     // ------------------------------------------------
 
 #ifdef TX_TEST
@@ -74,7 +79,7 @@ int main(int argc, char *argv[]) {
     // ------------------------------------------------
 
     // Process options
-    while ((option = getopt(argc, argv, "a:c:f:g:m:th")) != -1) {
+    while ((option = getopt(argc, argv, "a:c:f:g:w:km:th")) != -1) {
         switch (option) {
 
         case 'a':
@@ -91,6 +96,14 @@ int main(int argc, char *argv[]) {
 
         case 'g':
             rx_gain = atof(optarg);
+            break;
+
+        case 'w':
+            pcap_output_path = optarg;
+            break;
+
+        case 'k':
+            keep_bad_fcs = true;
             break;
 
         case 'm':
@@ -129,6 +142,10 @@ int main(int argc, char *argv[]) {
         return (rc == 0) ? 0 : -1;
     }
     // ------------------------------------------------------------
+
+    if (pcap_output_path != NULL && packet_pcap_open(pcap_output_path, keep_bad_fcs) != 0) {
+        return -1;
+    }
 
     // Init the ring buffer
     lfrb_init(&lfrb);
@@ -291,6 +308,10 @@ int main(int argc, char *argv[]) {
         return -1;
     }
     // ------------------------------------------------------------
+
+    if (packet_pcap_close() != 0) {
+        return -1;
+    }
 
     // ----------------------------Close---------------------------
     // Close channelizer

@@ -97,6 +97,8 @@ brew install cmake pkgconf uhd fftw
 -c  受信チャネル番号
 -f  受信周波数 [Hz]
 -g  受信ゲイン
+-w  PCAP 出力先のファイルまたは FIFO
+-k  -w 使用時に FCS 不一致フレームも出力
 -m  指定チャネルで FSK/GFSK modem loopback self-test を実行して終了
 -t  channelizer の single-tone self-test を実行して終了
 -h  ヘルプ表示
@@ -136,6 +138,23 @@ brew install cmake pkgconf uhd fftw
 
 停止は `Ctrl+C` です。
 
+### Wireshark へリアルタイム入力する場合
+
+FIFO を作成し、先に Wireshark で読み込みを開始してから Sniffer を起動します。
+
+```bash
+mkfifo /tmp/wisun.pcap
+wireshark -k -i /tmp/wisun.pcap
+```
+
+別のターミナルで受信を開始します。
+
+```bash
+./build/wisun-sniffer -w /tmp/wisun.pcap
+```
+
+`-w` は通常の PCAP ファイルにも指定できます。Wireshark でリアルタイム表示する場合は FIFO を使ってください。出力は IEEE 802.15.4 no-FCS (linktype 230) で、FCS を検証してから取り除きます。FCS 不一致フレームは既定で除外され、`-k` を追加すると不一致でも FCS を除去して出力します。通常の解析ログは標準出力に引き続き表示されます。
+
 ## ライブ受信時の注意
 
 - 現在の実装は UHD で利用可能な USRP と 10 Msps の受信を前提としています。
@@ -151,4 +170,3 @@ brew install cmake pkgconf uhd fftw
 ## 今後の改善候補
 
 - ARIB STD-T108 / IEEE 802.15.4g のより詳細なデコード
-- PCAP や構造化ログへの出力
