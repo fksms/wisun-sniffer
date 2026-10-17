@@ -49,7 +49,9 @@ void *demodulator_thread(void *arg) {
             return NULL;
         }
 
-        fprintf(stdout, "\nDemod thread: Received burst of %d samples for %d channels\n", cols, rows);
+        fprintf(stdout, "Demod thread: Received burst of %d samples for %d channels\n\n", cols, rows);
+
+        fprintf(stdout, "===============start===============\n\n");
 
         for (int i = 0; i < rows; ++i) {
 
@@ -105,6 +107,8 @@ void *demodulator_thread(void *arg) {
 
             fprintf(stdout, "\n");
         }
+
+        fprintf(stdout, "================end================\n\n");
 
         // counter++;
         free(data);

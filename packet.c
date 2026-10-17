@@ -344,18 +344,33 @@ void analyze_packet(const uint8_t *rx_bits, int n_rx_bits) {
         whitening_process(payload_data, n_bytes, 0x1FF);
     }
 
-    // ペイロードを出力
-    fprintf(stdout, "Payload bytes: ");
+    // IEEE 802.15.4 transmits each PSDU octet least-significant bit first.
     for (int i = 0; i < n_bytes; ++i) {
+        payload_data[i] = reverse_bits(payload_data[i]);
+    }
+
+    size_t fcs_len = fcs_type ? 2 : 4;
+    size_t body_len = (size_t)n_bytes >= fcs_len ? (size_t)n_bytes - fcs_len : 0;
+    bool fcs_valid = (size_t)n_bytes >= fcs_len && check_fcs(payload_data, (size_t)n_bytes, fcs_type);
+
+    fprintf(stdout, "Payload bytes: ");
+    for (size_t i = 0; i < body_len; ++i) {
         fprintf(stdout, "%02X ", payload_data[i]);
     }
     fprintf(stdout, "\n");
 
+    if ((size_t)n_bytes < fcs_len) {
+        fprintf(stdout, "FCS: unavailable (frame too short)\n");
+    } else if (fcs_type) {
+        uint16_t fcs = (uint16_t)payload_data[body_len] | (uint16_t)payload_data[body_len + 1] << 8;
+        fprintf(stdout, "FCS: %04X (%s)\n", fcs, fcs_valid ? "valid" : "invalid");
+    } else {
+        uint32_t fcs = (uint32_t)payload_data[body_len] | (uint32_t)payload_data[body_len + 1] << 8 |
+                       (uint32_t)payload_data[body_len + 2] << 16 | (uint32_t)payload_data[body_len + 3] << 24;
+        fprintf(stdout, "FCS: %08X (%s)\n", fcs, fcs_valid ? "valid" : "invalid");
+    }
+
     if (pcap_file != NULL) {
-        // IEEE 802.15.4 transmits each PSDU octet least-significant bit first.
-        for (int i = 0; i < n_bytes; ++i) {
-            payload_data[i] = reverse_bits(payload_data[i]);
-        }
         pcap_write_frame(payload_data, (size_t)n_bytes, fcs_type);
     }
 
