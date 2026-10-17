@@ -57,7 +57,7 @@ void init_burst_catchers(BurstCatcher *catchers, int num_channels) {
 // Channelizerのセットアップ
 int channelizer_setup(channelizer_handle *handle) {
     // 分割されたFIRフィルタ係数へのポインタ
-    double(*split_filter)[COEF_PER_STAGE] = handle->split_filter;
+    double (*split_filter)[COEF_PER_STAGE] = handle->split_filter;
 
     // FIRフィルタのタップ数
     int order = COEF_PER_STAGE * NUM_CHANNELS;

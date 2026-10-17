@@ -95,13 +95,6 @@ void *demodulator_thread(void *arg) {
                 return NULL;
             }
 
-            // 復調したビット列を表示
-            // fprintf(stdout, "Demodulated bits (%d bits): ", n_rx_bits);
-            // for (int j = 0; j < n_rx_bits; ++j) {
-            //     fprintf(stdout, "%d", rx_bits[j]);
-            // }
-            // fprintf(stdout, "\n");
-
             // パケットの解析
             analyze_packet(rx_bits, n_rx_bits);
 
